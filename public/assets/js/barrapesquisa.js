@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:3000'; 
+// A variável API_URL foi REMOVIDA.
+// const API_URL = 'http://localhost:3000'; 
 
 document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -16,16 +17,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function realizarBusca(termo) {
     try {
+        // ==================================================================
+        // CORREÇÃO APLICADA AQUI:
+        // Todas as chamadas fetch dentro do Promise.all foram atualizadas
+        // para usar os caminhos relativos da API.
+        // ==================================================================
         const [produtosRes, cursosRes, empregosRes] = await Promise.all([
-            fetch(`${API_URL}/produtos`),
-            fetch(`${API_URL}/cursos`),
-            fetch(`${API_URL}/empregos`)
+            fetch('/api/produtos'),
+            fetch('/api/cursos'),
+            fetch('/api/empregos')
         ]);
 
         const produtos = await produtosRes.json();
         const cursos = await cursosRes.json();
         const empregos = await empregosRes.json();
 
+        // Sua lógica de filtro está ótima!
         const produtosEncontrados = produtos.filter(p => 
             p.nome.toLowerCase().includes(termo) || 
             p.descricao.toLowerCase().includes(termo) ||
@@ -79,14 +86,15 @@ function exibirResultados(tipo, resultados) {
                     <img src="/img/${item.imagens[0]}" alt="${item.nome}">
                     <h3>${item.nome}</h3>
                     <p class="fazenda">${item.produtor.propriedade}</p>
-                    <a href="detalhes.html?id=${item.id}" class="botao-detalhes">Saber mais ></a>
+                    <a href="/paginas/detalhes.html?id=${item.id}" class="botao-detalhes">Saber mais ></a>
                 </div>`;
         } else if (tipo === 'cursos') {
+            // Nota: Corrigi o caminho da imagem do curso para /img/ como os outros
             cardHTML = `
                 <div class="card-curso">
-                    <img src="/${item.imagem}" alt="${item.titulo}">
+                    <img src="/img/${item.imagem}" alt="${item.titulo}">
                     <h3>${item.titulo}</h3>
-                    <a href="detalhescursos.html?id=${item.id}" class="sabermais">Saber mais</a>
+                    <a href="/paginas/detalhescursos.html?id=${item.id}" class="sabermais">Saber mais</a>
                 </div>`;
         } else if (tipo === 'empregos') {
              cardHTML = `
@@ -94,7 +102,7 @@ function exibirResultados(tipo, resultados) {
                     <img src="https://img.icons8.com/color/100/worker-male--v1.png" alt="Ícone de Emprego">
                     <h3>${item.tituloVaga}</h3>
                     <p>${item.local}</p>
-                    <button onclick="window.location.href='detalhesemprego.html?id=${item.id}'">Saber mais ></button>
+                    <button onclick="window.location.href='/paginas/detalhesemprego.html?id=${item.id}'">Saber mais ></button>
                 </div>`;
         }
         container.innerHTML += cardHTML;
