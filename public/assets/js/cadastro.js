@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:3000';
+// A variável API_URL foi REMOVIDA.
+// const API_URL = 'http://localhost:3000';
 
 function showStep(stepNumber) {
     document.querySelectorAll('#cadastro-container .step').forEach(step => {
@@ -36,7 +37,6 @@ document.addEventListener('DOMContentLoaded', function () {
         toggleToCadastro.addEventListener('click', (e) => {
             e.preventDefault();
             window.location.hash = 'cadastro';
-            
         });
     }
 
@@ -61,11 +61,13 @@ document.addEventListener('DOMContentLoaded', function () {
             dadosUsuario.dataCadastro = new Date().toISOString(); 
 
             try {
-                const responseCheck = await fetch(`${API_URL}/usuarios?email=${encodeURIComponent(dadosUsuario.email)}`);
+                // CORREÇÃO 1: Verificando e-mail existente
+                const responseCheck = await fetch(`/api/usuarios?email=${encodeURIComponent(dadosUsuario.email)}`);
                 const usuarioExistente = await responseCheck.json();
                 if (usuarioExistente.length > 0) return alert('Este e-mail já está cadastrado!');
 
-                const responseCreate = await fetch(`${API_URL}/usuarios`, {
+                // CORREÇÃO 2: Criando o novo usuário (POST)
+                const responseCreate = await fetch(`/api/usuarios`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dadosUsuario)
@@ -89,7 +91,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const email = this.querySelector('input[name="email"]').value;
             const senha = this.querySelector('input[name="senha"]').value;
             try {
-                const response = await fetch(`${API_URL}/usuarios?email=${encodeURIComponent(email)}&senha=${encodeURIComponent(senha)}`);
+                // CORREÇÃO 3: Verificando login e senha
+                const response = await fetch(`/api/usuarios?email=${encodeURIComponent(email)}&senha=${encodeURIComponent(senha)}`);
                 const usuariosEncontrados = await response.json();
                 if (usuariosEncontrados.length > 0) {
                     const usuario = usuariosEncontrados[0];
