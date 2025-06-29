@@ -1,6 +1,5 @@
 {
-  "usuarios": [
-  ],
+  "usuarios": [],
   "produtos": [
     {
       "id": "1",
@@ -714,16 +713,7 @@
     }
   ],
   "candidaturas": [
-    {
-      "id": "d7ae",
-      "vagaId": null,
-      "usuarioId": "63fc",
-      "nomeCandidato": "Gabrie Areds",
-      "emailCandidato": "gabrieledes1@gmail.com",
-      "nomeArquivo": "TheoMaitêEkids.pdf",
-      "dataCandidatura": "2025-06-28T16:50:44.913Z"
-    }
+   
   ],
-  "inscricoes": [
-  ]
+  "inscricoes": []
 }
