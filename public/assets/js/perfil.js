@@ -1,7 +1,6 @@
-// perfil.js - CÓDIGO CORRIGIDO
+// perfil.js - VERSÃO FINAL COM EDIÇÃO E UPLOAD FALSOS
 
-// A variável API_URL foi REMOVIDA.
-// const API_URL = 'http://localhost:3000';
+// A variável API_URL foi REMOVIDA, pois todas as chamadas foram corrigidas.
 
 document.addEventListener('DOMContentLoaded', function () {
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
@@ -16,17 +15,18 @@ document.addEventListener('DOMContentLoaded', function () {
     configurarEventListeners(usuarioLogado);
 });
 
+
 function carregarDadosVisuais(usuario) {
     document.getElementById('nome-usuario').textContent = `${usuario.nome} ${usuario.sobrenome}`;
     document.getElementById('email-usuario').textContent = usuario.email;
     document.getElementById('local-usuario').textContent = `${usuario.bairro}, ${usuario.rua}, ${usuario.numero}`;
     
+    // Usa a foto do usuário ou um avatar padrão.
     document.getElementById('foto-perfil').src = usuario.foto || '/img/avatar_padrao.png';
 
     const membroDesdeElemento = document.getElementById('membro-desde');
     if (usuario.dataCadastro) {
         const data = new Date(usuario.dataCadastro);
-
         if (!isNaN(data.getTime())) {
              membroDesdeElemento.textContent = `Membro desde: ${data.toLocaleDateString('pt-BR')}`;
              membroDesdeElemento.style.display = 'block';
@@ -38,23 +38,24 @@ function carregarDadosVisuais(usuario) {
     }
 }
 
+
 async function carregarCursosInscritos(usuario) {
     const cursosGrid = document.getElementById('cursos-grid');
     const spanNumeroCursos = document.getElementById('numero-cursos-inscritos');
     if (!cursosGrid || !spanNumeroCursos) return;
 
     try {
-        // CORREÇÃO 1: Buscando as inscrições
+        // As chamadas GET para ler dados continuam funcionando normalmente!
         const responseInscricoes = await fetch(`/api/inscricoes?usuarioId=${usuario.id}`);
         const inscricoes = await responseInscricoes.json();
         spanNumeroCursos.textContent = inscricoes.length;
+
         if (inscricoes.length === 0) {
             cursosGrid.innerHTML = '<p class="aviso-sem-cursos">Você ainda não se inscreveu em nenhum curso.</p>';
             return;
         }
+
         const idsDosCursos = inscricoes.map(i => `id=${i.cursoId}`).join('&');
-        
-        // CORREÇÃO 2: Buscando os detalhes dos cursos inscritos
         const responseCursos = await fetch(`/api/cursos?${idsDosCursos}`);
         const cursosInscritos = await responseCursos.json();
         
@@ -79,6 +80,7 @@ async function carregarCursosInscritos(usuario) {
         cursosGrid.innerHTML = '<p class="aviso-sem-cursos">Erro ao carregar seus cursos.</p>';
     }
 }
+
 
 function configurarEventListeners(usuarioLogado) {
     const linkAlterarFoto = document.getElementById('link-alterar-foto');
@@ -113,9 +115,12 @@ function configurarEventListeners(usuarioLogado) {
             modalEditar.style.display = 'none';
         });
 
-        formEditar.addEventListener('submit', async (event) => {
+        // --- LÓGICA DE ATUALIZAR PERFIL MODIFICADA ---
+        formEditar.addEventListener('submit', (event) => {
             event.preventDefault();
             const usuarioAtual = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+            
+            // Cria um novo objeto com os dados atualizados do formulário
             const dadosAtualizados = {
                 ...usuarioAtual,
                 nome: formEditar.nome.value,
@@ -124,27 +129,21 @@ function configurarEventListeners(usuarioLogado) {
                 numero: formEditar.numero.value,
                 bairro: formEditar.bairro.value,
             };
-            try {
-                // CORREÇÃO 3: Atualizando o perfil (PUT)
-                // AVISO: Esta requisição vai APARENTAR funcionar, mas não salvará os dados permanentemente na Vercel.
-                const response = await fetch(`/api/usuarios/${usuarioAtual.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(dadosAtualizados)
-                });
-                if (!response.ok) throw new Error('Falha ao atualizar o perfil.');
-                sessionStorage.setItem('usuarioLogado', JSON.stringify(dadosAtualizados));
-                carregarDadosVisuais(dadosAtualizados);
-                modalEditar.style.display = 'none';
-                alert('Perfil atualizado com sucesso!');
-            } catch (error) {
-                console.error('Erro ao atualizar perfil:', error);
-                alert('Não foi possível atualizar o perfil.');
-            }
+
+            // SIMULAÇÃO: Atualiza os dados na sessionStorage em vez de enviar para a API
+            sessionStorage.setItem('usuarioLogado', JSON.stringify(dadosAtualizados));
+            
+            // Atualiza a visualização na página com os novos dados
+            carregarDadosVisuais(dadosAtualizados);
+            
+            // Fecha o modal e avisa o usuário
+            modalEditar.style.display = 'none';
+            alert('Perfil atualizado com sucesso (nesta sessão)!');
         });
     }
 }
 
+// --- LÓGICA DE ATUALIZAR FOTO MODIFICADA ---
 async function processarEAtualizarFoto(arquivo, usuario) {
     const MAX_LARGURA = 400;
     const leitor = new FileReader();
@@ -152,7 +151,7 @@ async function processarEAtualizarFoto(arquivo, usuario) {
     leitor.onload = function (eventoLeitor) {
         const img = new Image();
         img.src = eventoLeitor.target.result;
-        img.onload = async function () {
+        img.onload = function () {
             const canvas = document.createElement('canvas');
             let { width, height } = img;
             if (width > MAX_LARGURA) {
@@ -164,23 +163,15 @@ async function processarEAtualizarFoto(arquivo, usuario) {
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
             const urlDaImagemOtimizada = canvas.toDataURL('image/jpeg', 0.8);
-            try {
-                // CORREÇÃO 4: Atualizando a foto (PATCH)
-                // AVISO: Esta requisição vai APARENTAR funcionar, mas não salvará os dados permanentemente na Vercel.
-                const response = await fetch(`/api/usuarios/${usuario.id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ foto: urlDaImagemOtimizada })
-                });
-                if (!response.ok) throw new Error('Falha ao salvar a nova foto.');
-                document.getElementById('foto-perfil').src = urlDaImagemOtimizada;
-                usuario.foto = urlDaImagemOtimizada;
-                sessionStorage.setItem('usuarioLogado', JSON.stringify(usuario));
-                alert('Foto de perfil atualizada com sucesso!');
-            } catch (error) {
-                console.error("Erro ao atualizar a foto:", error);
-                alert("Não foi possível atualizar a foto de perfil.");
-            }
+
+            // SIMULAÇÃO: Atualiza a foto na sessionStorage
+            const usuarioAtualizado = { ...usuario, foto: urlDaImagemOtimizada };
+            sessionStorage.setItem('usuarioLogado', JSON.stringify(usuarioAtualizado));
+
+            // Atualiza a visualização na página
+            document.getElementById('foto-perfil').src = urlDaImagemOtimizada;
+
+            alert('Foto de perfil atualizada com sucesso (nesta sessão)!');
         };
     };
     leitor.readAsDataURL(arquivo);
