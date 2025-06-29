@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000';
+const response = await fetch(`/api/empregos/${id}`);
 
 document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
