@@ -1,3 +1,5 @@
+// cadastroempregos.js - VERSÃO CORRIGIDA COM SIMULAÇÃO
+
 document.addEventListener('DOMContentLoaded', () => {
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
     if (!usuarioLogado) {
@@ -12,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const valorInput = document.getElementById('valor');
     const form = document.querySelector('form');
 
+    // Suas funções de máscara e validação estão perfeitas!
     if(nomeInput) permitirSomenteLetras(nomeInput);
     if(localInput) permitirSomenteLetras(localInput);
     if(telefoneInput) mascaraTelefone(telefoneInput);
@@ -30,7 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 valor: document.getElementById('valor').value.trim(),
                 requisitos: document.getElementById('observacoes').value.trim(),
                 responsavel: `${usuarioLogado.nome} ${usuarioLogado.sobrenome}`, 
-                criadorId: usuarioLogado.id 
+                criadorId: usuarioLogado.id,
+                // Adiciona um ID único para a nova vaga
+                id: `vaga_${Date.now()}`
             };
 
             if (!oferta.tituloVaga || !oferta.contato || !oferta.descricao || !oferta.local) {
@@ -38,27 +43,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
+            // --- LÓGICA DE SIMULAÇÃO APLICADA AQUI ---
             try {
-                const response = await fetch('http://localhost:3000/empregos', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(oferta)
-                });
+                // 1. Busca a lista de empregos atual da API para ter a base.
+                const response = await fetch('/api/empregos');
+                if (!response.ok) throw new Error('Não foi possível buscar a lista de empregos base.');
+                let empregosAtuais = await response.json();
 
-                if (!response.ok) throw new Error('Erro ao enviar para o servidor');
+                // 2. Adiciona a nova oferta à lista.
+                empregosAtuais.push(oferta);
 
-                await response.json();
-                alert('Oferta de emprego cadastrada com sucesso!');
+                // 3. Salva a lista COMPLETA E ATUALIZADA na memória temporária do navegador.
+                sessionStorage.setItem('empregos_temp', JSON.stringify(empregosAtuais));
+
+                alert('Oferta de emprego cadastrada com sucesso (nesta sessão)!');
                 form.reset();
                 window.location.href = '/paginas/paginainicialempregos.html';
 
             } catch (error) {
-                console.error('Erro ao cadastrar vaga:', error);
-                alert('Erro ao enviar os dados para o servidor.');
+                console.error('Erro ao simular o cadastro da vaga:', error);
+                alert('Ocorreu um erro inesperado.');
             }
         });
     }
 });
+
+// Suas funções helper permanecem as mesmas
 function permitirSomenteLetras(input) {
     input.addEventListener('input', function () {
         this.value = this.value.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ\s]/g, '');

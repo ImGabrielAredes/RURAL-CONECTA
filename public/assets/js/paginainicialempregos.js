@@ -23,19 +23,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Dentro do arquivo paginainicialempregos.js
+
 async function carregarVagas() {
     const containerDestaque = document.getElementById('vagas-destaque-container');
     if (!containerDestaque) return;
 
     try {
-        // ==================================================================
-        // MUDANÇA PRINCIPAL AQUI:
-        // Trocamos a URL antiga (`${API_URL}/empregos`) por este caminho relativo.
-        // O navegador irá buscar em "https://seu-site.vercel.app/api/empregos",
-        // que é exatamente o que configuramos na Vercel.
-        // ==================================================================
-        const response = await fetch('/api/empregos');
-        const empregos = await response.json();
+        let empregos = [];
+        
+        // 1. Tenta carregar a lista de vagas da memória da sessão.
+        const empregosTemporarios = sessionStorage.getItem('empregos_temp');
+
+        if (empregosTemporarios) {
+            // Se encontrou, usa essa lista (que contém a vaga recém-cadastrada).
+            console.log("Carregando vagas da memória da sessão...");
+            empregos = JSON.parse(empregosTemporarios);
+        } else {
+            // Se não, busca da API normalmente (primeiro acesso à página).
+            console.log("Buscando vagas da API...");
+            const response = await fetch('/api/empregos');
+            if (!response.ok) throw new Error("Falha ao buscar vagas da API.");
+            empregos = await response.json();
+        }
         
         containerDestaque.innerHTML = '';
 
@@ -44,7 +54,6 @@ async function carregarVagas() {
             return;
         }
 
-        // A sua lógica para criar os cards está perfeita e foi mantida.
         empregos.reverse().forEach(vaga => { 
             const cardHTML = `
                 <div class="card">
@@ -57,7 +66,6 @@ async function carregarVagas() {
         });
 
     } catch (error) {
-        // O seu tratamento de erro também está ótimo e foi mantido.
         console.error("Erro ao carregar vagas:", error);
         containerDestaque.innerHTML = '<p>Erro ao carregar as vagas. Tente novamente mais tarde.</p>';
     }
