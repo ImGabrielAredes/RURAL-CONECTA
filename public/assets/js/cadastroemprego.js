@@ -1,5 +1,3 @@
-// cadastroempregos.js - VERSÃO CORRIGIDA COM SIMULAÇÃO
-
 document.addEventListener('DOMContentLoaded', () => {
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
     if (!usuarioLogado) {
@@ -14,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const valorInput = document.getElementById('valor');
     const form = document.querySelector('form');
 
-    // Suas funções de máscara e validação estão perfeitas!
     if(nomeInput) permitirSomenteLetras(nomeInput);
     if(localInput) permitirSomenteLetras(localInput);
     if(telefoneInput) mascaraTelefone(telefoneInput);
@@ -34,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 requisitos: document.getElementById('observacoes').value.trim(),
                 responsavel: `${usuarioLogado.nome} ${usuarioLogado.sobrenome}`, 
                 criadorId: usuarioLogado.id,
-                // Adiciona um ID único para a nova vaga
                 id: `vaga_${Date.now()}`
             };
 
@@ -43,17 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            // --- LÓGICA DE SIMULAÇÃO APLICADA AQUI ---
             try {
-                // 1. Busca a lista de empregos atual da API para ter a base.
                 const response = await fetch('/api/empregos');
                 if (!response.ok) throw new Error('Não foi possível buscar a lista de empregos base.');
                 let empregosAtuais = await response.json();
-
-                // 2. Adiciona a nova oferta à lista.
                 empregosAtuais.push(oferta);
 
-                // 3. Salva a lista COMPLETA E ATUALIZADA na memória temporária do navegador.
                 sessionStorage.setItem('empregos_temp', JSON.stringify(empregosAtuais));
 
                 alert('Oferta de emprego cadastrada com sucesso (nesta sessão)!');
@@ -68,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Suas funções helper permanecem as mesmas
 function permitirSomenteLetras(input) {
     input.addEventListener('input', function () {
         this.value = this.value.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ\s]/g, '');

@@ -1,12 +1,5 @@
-// ===================================================================
-//
-//   perfil.js - VERSÃO FINAL COMPLETA
-//   Contém toda a lógica de leitura e simulação para a página de perfil.
-//
-// ===================================================================
 
 document.addEventListener('DOMContentLoaded', function () {
-    // 1. Verifica se há um usuário logado na sessão. Se não, bloqueia a página.
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
     if (!usuarioLogado) {
         alert("Acesso negado. Por favor, faça o login.");
@@ -14,7 +7,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    // 2. Chama as funções para carregar todos os dados da página.
     carregarDadosVisuais(usuarioLogado);
     carregarCursosInscritos(usuarioLogado);
     configurarEventListeners(usuarioLogado);
@@ -22,8 +14,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 /**
- * Preenche as informações visuais do card de perfil do usuário.
- * @param {object} usuario - O objeto do usuário vindo da sessionStorage.
+ * 
+ * @param {object} usuario 
  */
 function carregarDadosVisuais(usuario) {
     document.getElementById('nome-usuario').textContent = `${usuario.nome} ${usuario.sobrenome}`;
@@ -43,9 +35,9 @@ function carregarDadosVisuais(usuario) {
 
 
 /**
- * Carrega a lista de cursos em que o usuário está inscrito.
- * Esta função é inteligente: ela busca as inscrições da API e também da memória da sessão.
- * @param {object} usuario - O objeto do usuário logado.
+ * 
+ * 
+ * @param {object} usuario 
  */
 async function carregarCursosInscritos(usuario) {
     const cursosGrid = document.getElementById('cursos-grid');
@@ -53,14 +45,11 @@ async function carregarCursosInscritos(usuario) {
     if (!cursosGrid || !spanNumeroCursos) return;
 
     try {
-        // Busca as inscrições "permanentes" da API
         const responseInscricoes = await fetch(`/api/inscricoes?usuarioId=${usuario.id}`);
         const inscricoesAntigas = await responseInscricoes.json();
 
-        // Busca as inscrições "temporárias" (desta sessão) da memória do navegador
         const inscricoesNovas = JSON.parse(sessionStorage.getItem('inscricoes_temp')) || [];
         
-        // Junta as duas listas, garantindo que não haja duplicatas
         const todasInscricoesMap = new Map();
         [...inscricoesAntigas, ...inscricoesNovas].forEach(insc => todasInscricoesMap.set(insc.cursoId, insc));
         const todasInscricoes = Array.from(todasInscricoesMap.values());
@@ -72,14 +61,12 @@ async function carregarCursosInscritos(usuario) {
             return;
         }
 
-        // Busca os detalhes dos cursos com base nos IDs das inscrições
         const idsDosCursos = todasInscricoes.map(i => `id=${i.cursoId}`).join('&');
         if (!idsDosCursos) return;
 
         const responseCursos = await fetch(`/api/cursos?${idsDosCursos}`);
         const cursosInscritos = await responseCursos.json();
         
-        // Renderiza os cards dos cursos na tela
         cursosGrid.innerHTML = '';
         cursosInscritos.forEach(curso => {
             const imageUrl = curso.imagem ? `/img/${curso.imagem}` : '/img/placeholder-curso.png';
@@ -104,11 +91,10 @@ async function carregarCursosInscritos(usuario) {
 
 
 /**
- * Configura todos os event listeners da página (botões de editar, upload de foto, etc.).
- * @param {object} usuarioLogado - O objeto do usuário logado.
+ * 
+ * @param {object} usuarioLogado 
  */
 function configurarEventListeners(usuarioLogado) {
-    // Listener para o link de alterar foto
     const linkAlterarFoto = document.getElementById('link-alterar-foto');
     const inputFoto = document.getElementById('input-foto');
     if (linkAlterarFoto && inputFoto) {
@@ -122,7 +108,6 @@ function configurarEventListeners(usuarioLogado) {
         });
     }
     
-    // Listeners para o modal de edição de perfil
     const modalEditar = document.getElementById('modal-editar-perfil');
     const botaoEditarPerfil = document.querySelector('.botao-editar-perfil');
     const botaoCancelarEdicao = document.getElementById('botao-cancelar-edicao');
@@ -143,7 +128,6 @@ function configurarEventListeners(usuarioLogado) {
             modalEditar.style.display = 'none';
         });
 
-        // SIMULAÇÃO DE ATUALIZAÇÃO DE PERFIL (PUT)
         formEditar.addEventListener('submit', (event) => {
             event.preventDefault();
             const usuarioAtual = JSON.parse(sessionStorage.getItem('usuarioLogado'));
@@ -166,9 +150,9 @@ function configurarEventListeners(usuarioLogado) {
 
 
 /**
- * Processa a imagem de perfil, otimiza e simula o salvamento na sessionStorage.
- * @param {File} arquivo - O arquivo de imagem selecionado pelo usuário.
- * @param {object} usuario - O objeto do usuário logado.
+ * 
+ * @param {File} arquiv
+ * @param {object} usuario 
  */
 async function processarEAtualizarFoto(arquivo, usuario) {
     const MAX_LARGURA = 400;
@@ -190,7 +174,6 @@ async function processarEAtualizarFoto(arquivo, usuario) {
             ctx.drawImage(img, 0, 0, width, height);
             const urlDaImagemOtimizada = canvas.toDataURL('image/jpeg', 0.8);
 
-            // SIMULAÇÃO DE ATUALIZAÇÃO DA FOTO (PATCH)
             const usuarioAtualizado = { ...usuario, foto: urlDaImagemOtimizada };
             sessionStorage.setItem('usuarioLogado', JSON.stringify(usuarioAtualizado));
 

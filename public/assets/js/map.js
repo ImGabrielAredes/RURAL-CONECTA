@@ -1,10 +1,6 @@
-// O nome do seu arquivo pode ser map.js ou similar
-
-// A variável API_URL foi REMOVIDA.
 
 function iniciarMapa() {
 
-    // A chamada fetch foi CORRIGIDA para usar o caminho relativo da API.
     fetch('/api/produtos')
         .then(res => {
             if (!res.ok) {
@@ -60,10 +56,7 @@ function iniciarMapa() {
                     (erro) => console.warn("Erro ao obter geolocalização:", erro.message)
                 );
             }
-            
-            // ================== DICA PROFISSIONAL APLICADA AQUI ==================
-            // Adicionamos um pequeno atraso (delay) em cada chamada do geocoder 
-            // para não exceder os limites de requisições por segundo da API do Google.
+ 
             produtos.forEach((produto, index) => {
                 setTimeout(() => {
                     geocoder.geocode({ address: produto.produtor.localizacao }, (results, status) => {
@@ -94,10 +87,8 @@ function iniciarMapa() {
                             console.error(`Erro na geocodificação para "${produto.produtor.localizacao}": ${status}`);
                         }
                     });
-                }, index * 250); // Atraso de 250ms por chamada
+                }, index * 250); 
             });
-            // =======================================================================
-            
             filtroSelect.addEventListener('change', () => {
                 const selecionado = filtroSelect.value;
                 marcadores.forEach(marcador => {

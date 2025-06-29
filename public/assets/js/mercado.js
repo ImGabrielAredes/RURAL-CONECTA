@@ -1,31 +1,22 @@
-// mercado.js - CÓDIGO CORRIGIDO
-
-// A variável API_URL foi REMOVIDA, pois não precisamos mais dela.
-// const API_URL = 'http://localhost:3000';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const topProdutosWrapper = document.querySelector('#top-produtos-swiper .swiper-wrapper');
     const promocoesGrid = document.querySelector('#promocoes-grid');
 
     try {
-        // ==================================================================
-        // APLICAÇÃO DA REGRA DE OURO AQUI:
-        // Trocamos a URL antiga pela URL relativa da nossa API na Vercel.
-        // ==================================================================
+
         const response = await fetch('/api/produtos');
         
         if (!response.ok) throw new Error('Não foi possível carregar os produtos.');
         
         const produtos = await response.json();
 
-        // Sua lógica para separar e exibir os produtos está ótima!
         const produtosDestaque = produtos.slice(0, 8);
         const produtosPromocao = produtos.slice(8, 14); 
 
         if (topProdutosWrapper) {
             topProdutosWrapper.innerHTML = ''; 
             produtosDestaque.forEach(produto => {
-                // Dica: Usar o caminho absoluto "/paginas/detalhes.html" é mais robusto.
                 const slideHTML = `
                     <div class="swiper-slide">
                         <div class="produto-item">

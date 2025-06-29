@@ -1,10 +1,7 @@
-// cadastrocursos.js - VERSÃO FINAL COM SIMULAÇÃO DE CADASTRO E EDIÇÃO
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- SETUP INICIAL ---
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
     if (!usuarioLogado) {
-        // Proteção de página: só usuários logados podem cadastrar/editar.
         alert("Você precisa estar logado para acessar esta página.");
         window.location.href = '/paginas/cadastro.html#login';
         return; 
@@ -14,7 +11,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const editId = params.get('editId');
     const form = document.querySelector('.formulario-curso');
     
-    // Lógica para mostrar/esconder o campo de preço (está ótima!)
     const tipoPrecoRadios = form.querySelectorAll('input[name="tipoPreco"]');
     const campoPreco = document.getElementById('campoPreco');
     tipoPrecoRadios.forEach(radio => {
@@ -23,11 +19,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // --- LÓGICA DE CARREGAMENTO (PARA EDIÇÃO) ---
-    // PRIMEIRO: Estabelecemos a nossa "fonte da verdade" para os cursos.
     let cursosDaSessao = JSON.parse(sessionStorage.getItem('cursos_temp'));
     if (!cursosDaSessao) {
-        // Se não houver nada na memória, busca da API e salva na memória.
         try {
             const response = await fetch('/api/cursos');
             cursosDaSessao = await response.json();
@@ -39,12 +32,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // SE ESTIVER EM MODO DE EDIÇÃO, preenchemos o formulário.
     if (editId) {
         document.querySelector('h1').textContent = 'Editar Curso';
         form.querySelector('button[type="submit"]').textContent = 'Salvar Alterações';
         
-        // Procura o curso na nossa "fonte da verdade" (a lista da sessão).
         const cursoParaEditar = cursosDaSessao.find(c => c.id == editId);
 
         if (!cursoParaEditar) {
@@ -81,10 +72,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     form.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // Pega a lista mais atual da memória.
         let cursosAtuais = JSON.parse(sessionStorage.getItem('cursos_temp')) || [];
 
-        // Monta o objeto do curso com os dados do formulário.
         const cursoData = {
             titulo: form.titulo.value,
             categoria: form.categoria.value,
@@ -103,20 +92,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         if (editId) {
-            // Se for uma edição, encontramos o curso antigo e o substituímos.
             const index = cursosAtuais.findIndex(c => c.id == editId);
             if (index !== -1) {
-                // Mantém o ID e data de criação originais, atualiza o resto.
                 cursosAtuais[index] = { ...cursosAtuais[index], ...cursoData, id: editId };
             }
         } else {
-            // Se for uma criação, adicionamos um novo ID, data, e colocamos na lista.
+     
             cursoData.id = `curso_${Date.now()}`;
             cursoData.data = new Date().toISOString();
             cursosAtuais.push(cursoData);
         }
-
-        // Finalmente, salvamos a lista atualizada de volta na sessionStorage.
         sessionStorage.setItem('cursos_temp', JSON.stringify(cursosAtuais));
 
         alert(`Curso ${editId ? 'atualizado' : 'cadastrado'} com sucesso!`);
