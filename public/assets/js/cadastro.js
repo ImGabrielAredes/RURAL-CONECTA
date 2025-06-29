@@ -1,4 +1,4 @@
-// cadastro.js - VERSÃO FINAL PARA SIMULAÇÃO TEMPORÁRIA
+// cadastro.js - VERSÃO FINAL COM BANCO DE DADOS FALSO EM LOCALSTORAGE
 
 function showStep(stepNumber) {
     document.querySelectorAll('#cadastro-container .step').forEach(step => {
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // --- LÓGICA DE CADASTRO MODIFICADA ---
+    // --- LÓGICA DE CADASTRO COM LOCALSTORAGE ---
     if (cadastroForm) {
         cadastroForm.addEventListener('submit', function (event) {
             event.preventDefault(); 
@@ -54,28 +54,39 @@ document.addEventListener('DOMContentLoaded', function () {
             const senha = this.querySelector('input[name="senha"]').value;
             const confirmarSenha = this.querySelector('input[name="confirmarSenha"]').value;
             if (senha !== confirmarSenha) {
-                alert('As senhas não coincidem!');
-                return;
+                return alert('As senhas não coincidem!');
             }
             
             const formData = new FormData(this);
             const dadosUsuario = Object.fromEntries(formData.entries());
             delete dadosUsuario.confirmarSenha;
-            // Adiciona um ID e data de cadastro fictícios
             dadosUsuario.id = `user_${Date.now()}`; 
             dadosUsuario.dataCadastro = new Date().toISOString(); 
 
-            // SIMULAÇÃO: Em vez de enviar para a API, salvamos direto no navegador
-            // e já consideramos o usuário logado.
+            // 1. Puxamos a "tabela de usuários" do nosso banco de dados falso.
+            const usuariosCadastrados = JSON.parse(localStorage.getItem('lista_usuarios_fake')) || [];
+
+            // 2. Verificamos se o e-mail já existe.
+            const emailExistente = usuariosCadastrados.find(user => user.email === dadosUsuario.email);
+            if (emailExistente) {
+                return alert('Este e-mail já está cadastrado!');
+            }
+
+            // 3. Adicionamos o novo usuário à lista.
+            usuariosCadastrados.push(dadosUsuario);
+
+            // 4. Salvamos a lista atualizada de volta no banco de dados falso.
+            localStorage.setItem('lista_usuarios_fake', JSON.stringify(usuariosCadastrados));
+
+            // 5. Definimos o usuário logado para a sessão ATUAL.
             sessionStorage.setItem('usuarioLogado', JSON.stringify(dadosUsuario));
             
             alert('Cadastro realizado com sucesso! Você será redirecionado.');
-            // Redireciona para a página de perfil (ou sucesso)
             window.location.href = '/paginas/perfil.html'; 
         });
     }
 
-    // --- LÓGICA DE LOGIN MODIFICADA ---
+    // --- LÓGICA DE LOGIN COM LOCALSTORAGE ---
     if (loginForm) {
         loginForm.addEventListener('submit', function (event) {
             event.preventDefault(); 
@@ -83,17 +94,20 @@ document.addEventListener('DOMContentLoaded', function () {
             const email = this.querySelector('input[name="email"]').value;
             const senha = this.querySelector('input[name="senha"]').value;
             
-            // SIMULAÇÃO: Em vez de perguntar para a API, verificamos o usuário
-            // que foi salvo no "cadastro falso" durante esta sessão.
-            const usuarioSalvo = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+            // Puxamos a lista de usuários do nosso banco de dados falso.
+            const usuariosCadastrados = JSON.parse(localStorage.getItem('lista_usuarios_fake')) || [];
 
-            if (usuarioSalvo && usuarioSalvo.email === email && usuarioSalvo.senha === senha) {
-                // O login é válido se corresponder ao usuário que se cadastrou nesta sessão.
+            // Procuramos por um usuário que tenha o mesmo email E a mesma senha.
+            const usuarioEncontrado = usuariosCadastrados.find(user => user.email === email && user.senha === senha);
+
+            if (usuarioEncontrado) {
+                // Se encontrou, o login é válido!
+                sessionStorage.setItem('usuarioLogado', JSON.stringify(usuarioEncontrado));
                 alert('Login bem-sucedido!');
                 window.location.href = '/paginas/perfil.html';
             } else {
-                // Se não houver usuário na sessão ou os dados estiverem errados.
-                alert('Usuário não encontrado ou dados incorretos. Por favor, cadastre-se primeiro nesta sessão.');
+                // Se não encontrou, os dados estão incorretos.
+                alert('Email ou senha incorretos!');
             }
         });
     }
