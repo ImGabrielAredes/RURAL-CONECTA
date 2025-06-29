@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:3000';
+// A variável API_URL foi REMOVIDA.
+// const API_URL = 'http://localhost:3000';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -27,7 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function carregarDetalhesDoProduto(id) {
     try {
-        const response = await fetch(`${API_URL}/produtos/${id}`);
+        // ==================================================================
+        // CORREÇÃO APLICADA AQUI:
+        // Usando o caminho relativo da nossa API na Vercel.
+        // ==================================================================
+        const response = await fetch(`/api/produtos/${id}`);
+        
         if (!response.ok) {
             throw new Error('Produto não encontrado no servidor.');
         }
@@ -42,11 +48,11 @@ async function carregarDetalhesDoProduto(id) {
 
 
 /**
- * 
- @param {object} produto - 
+ * Exibe os dados de um produto na página.
+ * @param {object} produto - O objeto do produto vindo da API.
  */
 function exibirDadosDoProduto(produto) {
-
+    // Seu código para exibir os dados está excelente e foi mantido 100%!
     document.getElementById('nome-produto').textContent = produto.nome;
     document.getElementById('preco-produto').textContent = produto.preco.toFixed(2).replace('.', ',');
     document.getElementById('unidade').textContent = produto.unidade;
