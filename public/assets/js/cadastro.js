@@ -1,5 +1,4 @@
-// A variável API_URL foi REMOVIDA.
-// const API_URL = 'http://localhost:3000';
+// cadastro.js - VERSÃO FINAL PARA SIMULAÇÃO TEMPORÁRIA
 
 function showStep(stepNumber) {
     document.querySelectorAll('#cadastro-container .step').forEach(step => {
@@ -47,66 +46,58 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // --- LÓGICA DE CADASTRO MODIFICADA ---
     if (cadastroForm) {
-        cadastroForm.addEventListener('submit', async function (event) {
+        cadastroForm.addEventListener('submit', function (event) {
             event.preventDefault(); 
 
             const senha = this.querySelector('input[name="senha"]').value;
             const confirmarSenha = this.querySelector('input[name="confirmarSenha"]').value;
-            if (senha !== confirmarSenha) return alert('As senhas não coincidem!');
+            if (senha !== confirmarSenha) {
+                alert('As senhas não coincidem!');
+                return;
+            }
             
             const formData = new FormData(this);
             const dadosUsuario = Object.fromEntries(formData.entries());
             delete dadosUsuario.confirmarSenha;
+            // Adiciona um ID e data de cadastro fictícios
+            dadosUsuario.id = `user_${Date.now()}`; 
             dadosUsuario.dataCadastro = new Date().toISOString(); 
 
-            try {
-                // CORREÇÃO 1: Verificando e-mail existente
-                const responseCheck = await fetch(`/api/usuarios?email=${encodeURIComponent(dadosUsuario.email)}`);
-                const usuarioExistente = await responseCheck.json();
-                if (usuarioExistente.length > 0) return alert('Este e-mail já está cadastrado!');
-
-                // CORREÇÃO 2: Criando o novo usuário (POST)
-                const responseCreate = await fetch(`/api/usuarios`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(dadosUsuario)
-                });
-                if (!responseCreate.ok) throw new Error('Falha no cadastro.');
-                
-                const novoUsuario = await responseCreate.json();
-                sessionStorage.setItem('usuarioLogado', JSON.stringify(novoUsuario));
-                window.location.href = '/paginas/sucesso.html';
-
-            } catch (error) {
-                console.error('Erro no cadastro:', error);
-                alert('Ocorreu um erro ao realizar o cadastro.');
-            }
+            // SIMULAÇÃO: Em vez de enviar para a API, salvamos direto no navegador
+            // e já consideramos o usuário logado.
+            sessionStorage.setItem('usuarioLogado', JSON.stringify(dadosUsuario));
+            
+            alert('Cadastro realizado com sucesso! Você será redirecionado.');
+            // Redireciona para a página de perfil (ou sucesso)
+            window.location.href = '/paginas/perfil.html'; 
         });
     }
+
+    // --- LÓGICA DE LOGIN MODIFICADA ---
     if (loginForm) {
-        loginForm.addEventListener('submit', async function (event) {
+        loginForm.addEventListener('submit', function (event) {
             event.preventDefault(); 
 
             const email = this.querySelector('input[name="email"]').value;
             const senha = this.querySelector('input[name="senha"]').value;
-            try {
-                // CORREÇÃO 3: Verificando login e senha
-                const response = await fetch(`/api/usuarios?email=${encodeURIComponent(email)}&senha=${encodeURIComponent(senha)}`);
-                const usuariosEncontrados = await response.json();
-                if (usuariosEncontrados.length > 0) {
-                    const usuario = usuariosEncontrados[0];
-                    sessionStorage.setItem('usuarioLogado', JSON.stringify(usuario));
-                    window.location.href = '/paginas/sucesso.html';
-                } else {
-                    alert('Email ou senha incorretos!');
-                }
-            } catch (error) {
-                console.error('Erro no login:', error);
-                alert('Ocorreu um erro ao tentar fazer login.');
+            
+            // SIMULAÇÃO: Em vez de perguntar para a API, verificamos o usuário
+            // que foi salvo no "cadastro falso" durante esta sessão.
+            const usuarioSalvo = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+
+            if (usuarioSalvo && usuarioSalvo.email === email && usuarioSalvo.senha === senha) {
+                // O login é válido se corresponder ao usuário que se cadastrou nesta sessão.
+                alert('Login bem-sucedido!');
+                window.location.href = '/paginas/perfil.html';
+            } else {
+                // Se não houver usuário na sessão ou os dados estiverem errados.
+                alert('Usuário não encontrado ou dados incorretos. Por favor, cadastre-se primeiro nesta sessão.');
             }
         });
     }
+
     mostrarFormularioInicial();
     window.addEventListener('hashchange', mostrarFormularioInicial);
 });
