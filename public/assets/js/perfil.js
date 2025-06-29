@@ -1,4 +1,7 @@
-const API_URL = 'http://localhost:3000';
+// perfil.js - CÓDIGO CORRIGIDO
+
+// A variável API_URL foi REMOVIDA.
+// const API_URL = 'http://localhost:3000';
 
 document.addEventListener('DOMContentLoaded', function () {
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
@@ -13,10 +16,6 @@ document.addEventListener('DOMContentLoaded', function () {
     configurarEventListeners(usuarioLogado);
 });
 
-/**
- * 
- * @param {object} usuario 
- */
 function carregarDadosVisuais(usuario) {
     document.getElementById('nome-usuario').textContent = `${usuario.nome} ${usuario.sobrenome}`;
     document.getElementById('email-usuario').textContent = usuario.email;
@@ -39,17 +38,14 @@ function carregarDadosVisuais(usuario) {
     }
 }
 
-/**
- * 
- * @param {object} usuario 
- */
 async function carregarCursosInscritos(usuario) {
     const cursosGrid = document.getElementById('cursos-grid');
     const spanNumeroCursos = document.getElementById('numero-cursos-inscritos');
     if (!cursosGrid || !spanNumeroCursos) return;
 
     try {
-        const responseInscricoes = await fetch(`${API_URL}/inscricoes?usuarioId=${usuario.id}`);
+        // CORREÇÃO 1: Buscando as inscrições
+        const responseInscricoes = await fetch(`/api/inscricoes?usuarioId=${usuario.id}`);
         const inscricoes = await responseInscricoes.json();
         spanNumeroCursos.textContent = inscricoes.length;
         if (inscricoes.length === 0) {
@@ -57,8 +53,11 @@ async function carregarCursosInscritos(usuario) {
             return;
         }
         const idsDosCursos = inscricoes.map(i => `id=${i.cursoId}`).join('&');
-        const responseCursos = await fetch(`${API_URL}/cursos?${idsDosCursos}`);
+        
+        // CORREÇÃO 2: Buscando os detalhes dos cursos inscritos
+        const responseCursos = await fetch(`/api/cursos?${idsDosCursos}`);
         const cursosInscritos = await responseCursos.json();
+        
         cursosGrid.innerHTML = '';
         cursosInscritos.forEach(curso => {
             const imageUrl = curso.imagem ? `/img/${curso.imagem}` : '/img/placeholder-curso.png';
@@ -81,13 +80,7 @@ async function carregarCursosInscritos(usuario) {
     }
 }
 
-
-/**
- * 
- * @param {object} usuarioLogado 
- */
 function configurarEventListeners(usuarioLogado) {
-
     const linkAlterarFoto = document.getElementById('link-alterar-foto');
     const inputFoto = document.getElementById('input-foto');
     if (linkAlterarFoto && inputFoto) {
@@ -132,7 +125,9 @@ function configurarEventListeners(usuarioLogado) {
                 bairro: formEditar.bairro.value,
             };
             try {
-                const response = await fetch(`${API_URL}/usuarios/${usuarioAtual.id}`, {
+                // CORREÇÃO 3: Atualizando o perfil (PUT)
+                // AVISO: Esta requisição vai APARENTAR funcionar, mas não salvará os dados permanentemente na Vercel.
+                const response = await fetch(`/api/usuarios/${usuarioAtual.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dadosAtualizados)
@@ -150,9 +145,6 @@ function configurarEventListeners(usuarioLogado) {
     }
 }
 
-/**
- * 
- */
 async function processarEAtualizarFoto(arquivo, usuario) {
     const MAX_LARGURA = 400;
     const leitor = new FileReader();
@@ -173,7 +165,9 @@ async function processarEAtualizarFoto(arquivo, usuario) {
             ctx.drawImage(img, 0, 0, width, height);
             const urlDaImagemOtimizada = canvas.toDataURL('image/jpeg', 0.8);
             try {
-                const response = await fetch(`${API_URL}/usuarios/${usuario.id}`, {
+                // CORREÇÃO 4: Atualizando a foto (PATCH)
+                // AVISO: Esta requisição vai APARENTAR funcionar, mas não salvará os dados permanentemente na Vercel.
+                const response = await fetch(`/api/usuarios/${usuario.id}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ foto: urlDaImagemOtimizada })
