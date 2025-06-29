@@ -1,28 +1,37 @@
-// A função que busca os dados é declarada primeiro.
-// Note o "async" antes de "function". É isso que nos permite usar "await" aqui dentro.
+// Dentro do arquivo detalhesemprego.js
+
 async function carregarDetalhesDaVaga(id) {
     const container = document.getElementById('detalhe-vaga-box');
-    if (!container) {
-        console.error('Elemento "detalhe-vaga-box" não encontrado no HTML.');
-        return;
-    }
+    if (!container) return;
 
     try {
-        const response = await fetch(`/api/empregos/${id}`);
-        
-        if (!response.ok) {
-            throw new Error(`A vaga com ID ${id} não foi encontrada (Status: ${response.status})`);
+        let vaga = null;
+
+        // 1. PRIMEIRO, tenta encontrar a vaga na memória da sessão (para vagas recém-criadas).
+        const empregosTemporarios = sessionStorage.getItem('empregos_temp');
+        if (empregosTemporarios) {
+            const listaTemporaria = JSON.parse(empregosTemporarios);
+            // Procura na lista da memória pelo ID correspondente.
+            vaga = listaTemporaria.find(e => e.id == id); 
+        }
+
+        // 2. SE NÃO ENCONTROU na memória, busca na API (para vagas que já existiam).
+        if (!vaga) {
+            const response = await fetch(`/api/empregos/${id}`);
+            if (!response.ok) {
+                throw new Error(`A vaga com ID ${id} não foi encontrada (Status: ${response.status})`);
+            }
+            vaga = await response.json();
+        }
+
+        // 3. Se, depois de tudo, ainda não encontrou a vaga, exibe um erro.
+        if (!vaga) {
+             throw new Error(`A vaga com ID ${id} não foi encontrada em nenhum lugar.`);
         }
         
-        const vaga = await response.json();
-
-        // Seleciona os elementos e preenche com os dados da vaga
-        document.getElementById('titulo-vaga').textContent = vaga.tituloVaga;
-        document.getElementById('local-vaga').textContent = vaga.local;
-        document.getElementById('descricao-vaga').textContent = vaga.descricao;
-        document.getElementById('requisitos-vaga').textContent = vaga.requisitos;
-        document.getElementById('responsavel-vaga').textContent = vaga.responsavel;
-        document.getElementById('contato-vaga').textContent = vaga.contato;
+        // Se encontrou a vaga (seja na memória ou na API), exibe os dados.
+        // A sua função de exibir os dados já está perfeita!
+        exibirDadosDoProduto(vaga); 
         
     } catch (error) {
         console.error("Erro ao carregar detalhes da vaga:", error);
@@ -30,6 +39,33 @@ async function carregarDetalhesDaVaga(id) {
     }
 }
 
+
+// A sua função de exibir os dados permanece a mesma.
+// Renomeei para um nome mais genérico para refletir que ela agora exibe os detalhes da vaga.
+function exibirDadosDoProduto(vaga) {
+    document.getElementById('titulo-vaga').textContent = vaga.tituloVaga;
+    document.getElementById('local-vaga').textContent = vaga.local;
+    document.getElementById('descricao-vaga').textContent = vaga.descricao;
+    document.getElementById('requisitos-vaga').textContent = vaga.requisitos;
+    document.getElementById('responsavel-vaga').textContent = vaga.responsavel;
+    document.getElementById('contato-vaga').textContent = vaga.contato;
+}
+
+
+// O resto do seu arquivo (o EventListener 'DOMContentLoaded') permanece o mesmo.
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const vagaId = params.get('id');
+
+    if (vagaId) {
+        carregarDetalhesDaVaga(vagaId);
+    } else {
+        const container = document.getElementById('detalhe-vaga-box');
+        if (container) {
+            container.innerHTML = '<h1>Nenhuma vaga selecionada</h1><p>Por favor, volte para a página de empregos e selecione uma vaga.</p>';
+        }
+    }
+});
 // O script SÓ COMEÇA a rodar DEPOIS que o HTML estiver pronto.
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Pega os parâmetros da URL
