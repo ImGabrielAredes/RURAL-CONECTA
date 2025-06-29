@@ -1,9 +1,28 @@
-const API_URL = 'http://localhost:3000';
+// cursos.js - VERSÃO CORRIGIDA COM SIMULAÇÃO DE DELETE
+
+// A variável API_URL foi REMOVIDA.
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const response = await fetch(`${API_URL}/cursos`);
-        const todosCursos = await response.json();
+        // --- LÓGICA DE CARREGAMENTO ATUALIZADA ---
+        let todosCursos = [];
+        const cursosTemporarios = sessionStorage.getItem('cursos_temp');
+
+        if (cursosTemporarios) {
+            // Se já temos uma lista de cursos na memória (após uma exclusão), usamos ela.
+            console.log("Carregando cursos da memória da sessão...");
+            todosCursos = JSON.parse(cursosTemporarios);
+        } else {
+            // Se não, buscamos da API pela primeira vez.
+            console.log("Buscando cursos da API...");
+            // CORREÇÃO GET: Busca inicial dos cursos na API correta.
+            const response = await fetch('/api/cursos');
+            if (!response.ok) throw new Error("Falha ao buscar cursos da API.");
+            todosCursos = await response.json();
+            // NOVO: Após buscar, salvamos na sessionStorage para futuras manipulações (como excluir).
+            sessionStorage.setItem('cursos_temp', JSON.stringify(todosCursos));
+        }
+        
         const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
 
         renderizarColunas(todosCursos, usuarioLogado);
@@ -17,6 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 function renderizarColunas(todosCursos, usuarioLogado) {
+    // Sua lógica de filtros está ótima!
     const recomendados = todosCursos.filter(curso => (curso.visualizacoes || 0) >= 150); 
     const maisVistos = [...todosCursos].sort((a, b) => (b.visualizacoes || 0) - (a.visualizacoes || 0)).slice(0, 5); 
     const redesSociais = todosCursos.filter(curso => curso.categoria && curso.categoria.toLowerCase().includes("redes sociais"));
@@ -40,6 +60,7 @@ function renderizarCards(containerId, cursosParaRenderizar, usuarioLogado) {
 
     cursosParaRenderizar.forEach(curso => {
         let botoesAdminHTML = '';
+        // Esta lógica para exibir botões de admin está perfeita.
         if (usuarioLogado && curso.criadorId === usuarioLogado.id) {
             botoesAdminHTML = `
                 <div class="card-admin-botoes">
@@ -51,7 +72,8 @@ function renderizarCards(containerId, cursosParaRenderizar, usuarioLogado) {
 
         const div = document.createElement('div');
         div.className = 'itemcurso';
-        const imageUrl = curso.imagem ? `/img/${curso.imagem}` : '/codigos/src/public/img/placeholder-curso.png';
+        // Corrigido o caminho da imagem para ser mais consistente.
+        const imageUrl = curso.imagem ? `/img/${curso.imagem}` : '/img/placeholder-curso.png';
         div.innerHTML = `
             <h2>${curso.titulo}</h2>
             <img src="${imageUrl}" alt="${curso.titulo}">
@@ -64,10 +86,6 @@ function renderizarCards(containerId, cursosParaRenderizar, usuarioLogado) {
 }
 
 
-/**
- * 
- * 
- */
 function adicionarListenersAosBotoes() {
     document.querySelectorAll('.btn-editar').forEach(botao => {
         botao.addEventListener('click', (event) => {
@@ -85,20 +103,20 @@ function adicionarListenersAosBotoes() {
 }
 
 
-/**
- * 
- */
-async function excluirCurso(id) {
-    if (confirm('Tem certeza que deseja excluir este curso? Esta ação não pode ser desfeita.')) {
-        try {
-            const response = await fetch(`${API_URL}/cursos/${id}`, { method: 'DELETE' });
-            if (!response.ok) throw new Error("Falha na exclusão.");
-            
-            alert('Curso excluído com sucesso!');
-            window.location.reload();
-        } catch (error) {
-            console.error('Erro ao excluir curso:', error);
-            alert('Falha ao excluir o curso.');
-        }
+// --- LÓGICA DE SIMULAÇÃO DE DELETE ---
+function excluirCurso(id) {
+    if (confirm('Tem certeza que deseja excluir este curso? Esta ação não pode ser desfeita (nesta sessão).')) {
+        // 1. Pega a lista de cursos da memória da sessão.
+        const cursosAtuais = JSON.parse(sessionStorage.getItem('cursos_temp')) || [];
+        
+        // 2. Cria uma nova lista, filtrando para remover o curso com o ID correspondente.
+        const cursosAtualizados = cursosAtuais.filter(curso => curso.id != id);
+
+        // 3. Salva a nova lista (sem o curso excluído) de volta na sessionStorage.
+        sessionStorage.setItem('cursos_temp', JSON.stringify(cursosAtualizados));
+
+        alert('Curso excluído com sucesso!');
+        // 4. Recarrega a página. A página irá ler a lista atualizada da sessionStorage e o curso terá "sumido".
+        window.location.reload();
     }
 }
